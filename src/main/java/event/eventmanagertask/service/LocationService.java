@@ -2,6 +2,7 @@ package event.eventmanagertask.service;
 
 import event.eventmanagertask.dto.LocationDto;
 import event.eventmanagertask.entity.Location;
+import event.eventmanagertask.mapper.LocationMapper;
 import event.eventmanagertask.repository.LocationRepository;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
@@ -13,28 +14,30 @@ import java.util.stream.Collectors;
 @Service
 public class LocationService {
     private final LocationRepository locationRepository;
+    private final LocationMapper locationMapper;
 
-    public LocationService(LocationRepository locationRepository) {
+    public LocationService(LocationRepository locationRepository, LocationMapper locationMapper) {
         this.locationRepository = locationRepository;
+        this.locationMapper = locationMapper;
     }
 
     public LocationDto createLocation(LocationDto locationDto) {
-        Location location = convertFromDto(locationDto);
+        Location location = locationMapper.convertFromDto(locationDto);
         Location saved = locationRepository.save(location);
 
-        return convertToDto(saved);
+        return locationMapper.convertToDto(saved);
     }
 
     public LocationDto getLocationById(Long id) {
         Location location = locationRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Локация не найдена по id: " + id));
 
-        return convertToDto(location);
+        return locationMapper.convertToDto(location);
     }
 
     public List<LocationDto> getAllLocations() {
         return locationRepository.findAll().stream()
-                .map(this::convertToDto)
+                .map(locationMapper::convertToDto)
                 .collect(Collectors.toList());
     }
 
@@ -53,7 +56,7 @@ public class LocationService {
 
         Location updated = locationRepository.save(existedLocation);
 
-        return convertToDto(updated);
+        return locationMapper.convertToDto(updated);
     }
 
     public void deleteLocation(Long id) {
@@ -63,25 +66,5 @@ public class LocationService {
         //TODO if location already has event
 
         locationRepository.delete(location);
-    }
-
-    public Location convertFromDto(LocationDto locationDto) {
-        Location entity = new Location();
-        entity.setName(locationDto.getName());
-        entity.setAddress(locationDto.getAddress());
-        entity.setCapacity(locationDto.getCapacity());
-        entity.setDescription(locationDto.getDescription());
-
-        return entity;
-    }
-
-    public LocationDto convertToDto(Location location) {
-        LocationDto dto = new LocationDto();
-        dto.setId(location.getId());
-        dto.setName(location.getName());
-        dto.setAddress(location.getAddress());
-        dto.setCapacity(location.getCapacity());
-        dto.setDescription(location.getDescription());
-        return dto;
     }
 }
