@@ -1,8 +1,6 @@
 package event.eventmanagertask.mapper;
 
-import event.eventmanagertask.dto.UserDto;
 import event.eventmanagertask.entity.UserEntity;
-import event.eventmanagertask.model.Role;
 import event.eventmanagertask.model.User;
 import org.springframework.stereotype.Component;
 
