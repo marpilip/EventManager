@@ -4,6 +4,7 @@ import event.eventmanagertask.SignInRequest;
 import event.eventmanagertask.SignUpRequest;
 import event.eventmanagertask.dto.UserDto;
 import event.eventmanagertask.jwt.JwtTokenResponse;
+import event.eventmanagertask.mapper.UserMapper;
 import event.eventmanagertask.model.User;
 import event.eventmanagertask.service.AuthenticationService;
 import event.eventmanagertask.service.UserService;
@@ -21,17 +22,19 @@ public class UserController {
 
     private final UserService userService;
     private final AuthenticationService authenticationService;
+    private final UserMapper userMapper;
 
-    public UserController(UserService userService, AuthenticationService authenticationService) {
+    public UserController(UserService userService, AuthenticationService authenticationService, UserMapper userMapper) {
         this.userService = userService;
         this.authenticationService = authenticationService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping()
     public ResponseEntity<UserDto> register(@RequestBody @Validated SignUpRequest signUpRequest) {
         User createdUser = userService.registerUser(signUpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(convertDomainUser(createdUser));
+                .body(userMapper.convertDomainUser(createdUser));
     }
 
     @PostMapping("/auth")
@@ -44,15 +47,6 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<UserDto> getUserInfo(@PathVariable Long userId) {
         User user = userService.getUserById(userId);
-        return ResponseEntity.ok(convertDomainUser(user));
-    }
-
-    private UserDto convertDomainUser(User user) {
-        return new UserDto(
-                user.id(),
-                user.login(),
-                user.role(),
-                user.age()
-        );
+        return ResponseEntity.ok(userMapper.convertDomainUser(user));
     }
 }
