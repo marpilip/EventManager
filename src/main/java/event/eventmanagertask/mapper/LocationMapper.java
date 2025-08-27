@@ -1,13 +1,13 @@
 package event.eventmanagertask.mapper;
 
 import event.eventmanagertask.dto.LocationDto;
-import event.eventmanagertask.entity.Location;
+import event.eventmanagertask.entity.LocationEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LocationMapper {
-    public Location convertFromDto(LocationDto locationDto) {
-        Location entity = new Location();
+    public LocationEntity convertFromDto(LocationDto locationDto) {
+        LocationEntity entity = new LocationEntity();
         entity.setName(locationDto.getName());
         entity.setAddress(locationDto.getAddress());
         entity.setCapacity(locationDto.getCapacity());
@@ -16,7 +16,7 @@ public class LocationMapper {
         return entity;
     }
 
-    public LocationDto convertToDto(Location location) {
+    public LocationDto convertToDto(LocationEntity location) {
         LocationDto dto = new LocationDto();
         dto.setId(location.getId());
         dto.setName(location.getName());

@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
@@ -47,6 +46,22 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/users/auth")
                                 .permitAll()
+
+                                .requestMatchers(HttpMethod.POST, "/events")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/events/registrations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/events/registrations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/my")
+                                .hasAnyAuthority("USER", "ADMIN")
+
                                 .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint)
