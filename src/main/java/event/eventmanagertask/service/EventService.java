@@ -1,11 +1,13 @@
 package event.eventmanagertask.service;
 
 import event.eventmanagertask.dto.EventCreateRequestDto;
+import event.eventmanagertask.dto.EventSearchRequestDto;
 import event.eventmanagertask.dto.EventUpdateRequestDto;
 import event.eventmanagertask.dto.LocationDto;
 import event.eventmanagertask.entity.EventEntity;
 import event.eventmanagertask.entity.EventStatus;
 import event.eventmanagertask.exception.ForbiddenException;
+import event.eventmanagertask.mapper.EventDtoMapper;
 import event.eventmanagertask.mapper.EventEntityMapper;
 import event.eventmanagertask.model.Event;
 import event.eventmanagertask.model.Role;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -28,13 +31,15 @@ public class EventService {
     private final AuthenticationService authenticationService;
     private final EventEntityMapper eventEntityMapper;
     private final LocationService locationService;
+    private final EventDtoMapper eventDtoMapper;
 
     public EventService(EventRepository eventRepository, AuthenticationService authenticationService,
-                        EventEntityMapper eventEntityMapper, LocationService locationService) {
+                        EventEntityMapper eventEntityMapper, LocationService locationService, EventDtoMapper eventDtoMapper) {
         this.eventRepository = eventRepository;
         this.authenticationService = authenticationService;
         this.eventEntityMapper = eventEntityMapper;
         this.locationService = locationService;
+        this.eventDtoMapper = eventDtoMapper;
     }
 
     public Event createEvent(EventCreateRequestDto createRequest) throws BadRequestException {
@@ -164,5 +169,35 @@ public class EventService {
             throw new BadRequestException(
                     "Количество регистраций превышает новое максимальное количество мест");
         }
+    }
+
+    public List<Event> getAllEvents() {
+        User currentUser = authenticationService.getCurrentAuthenticatedUserOrThrow();
+        List<EventEntity> userEvents = eventRepository.findByOwnerId(currentUser.id());
+
+        return userEvents.stream()
+                .map(eventEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    public List<Event> searchEvents(EventSearchRequestDto searchRequest) {
+
+        List<EventEntity> events = eventRepository.searchEvents(
+                searchRequest.name(),
+                searchRequest.placesMin(),
+                searchRequest.placesMax(),
+                searchRequest.dateStartAfter(),
+                searchRequest.dateStartBefore(),
+                searchRequest.costMin(),
+                searchRequest.costMax(),
+                searchRequest.durationMin(),
+                searchRequest.durationMax(),
+                searchRequest.locationId(),
+                searchRequest.eventStatus()
+        );
+
+        return events.stream()
+                .map(eventEntityMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

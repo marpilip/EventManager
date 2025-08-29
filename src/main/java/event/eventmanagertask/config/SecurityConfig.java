@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 .permitAll()
 
                                 .requestMatchers(HttpMethod.POST, "/events")
-                                .hasAnyAuthority("USER", "ADMIN")
+                                .hasAnyAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/events/**")
                                 .hasAnyAuthority("USER", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/events/**")

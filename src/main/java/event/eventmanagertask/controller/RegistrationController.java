@@ -1,24 +1,30 @@
 package event.eventmanagertask.controller;
 
+import event.eventmanagertask.dto.EventDto;
+import event.eventmanagertask.mapper.EventDtoMapper;
+import event.eventmanagertask.model.Event;
 import event.eventmanagertask.model.User;
 import event.eventmanagertask.service.AuthenticationService;
 import event.eventmanagertask.service.RegistrationService;
 import org.apache.coyote.BadRequestException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/registrations")
+@RequestMapping("events/registrations")
 public class RegistrationController {
     private final RegistrationService registrationService;
     private final AuthenticationService authenticationService;
+    private final EventDtoMapper eventDtoMapper;
 
     public RegistrationController(RegistrationService registrationService,
-                                  AuthenticationService authenticationService) {
+                                  AuthenticationService authenticationService, EventDtoMapper eventDtoMapper) {
         this.registrationService = registrationService;
         this.authenticationService = authenticationService;
+        this.eventDtoMapper = eventDtoMapper;
     }
 
     @PostMapping("/{eventId}")
@@ -37,26 +43,13 @@ public class RegistrationController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Long>> getUserRegistrations() {
-        List<Long> eventIds = registrationService.getUserEventRegistrations();
+    public ResponseEntity<List<EventDto>> getUserRegistrations() {
+        List<Event> eventIds = registrationService.getUserEventRegistrations();
 
-        return ResponseEntity.ok(eventIds);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(eventIds.stream()
+                        .map(eventDtoMapper::toDto)
+                        .toList()
+                );
     }
-
-    @GetMapping("/event/{eventId}")
-    public ResponseEntity<List<Long>> getEventRegistrations(@PathVariable Long eventId) {
-        List<Long> userIds = registrationService.getEventRegistrations(eventId);
-
-        return ResponseEntity.ok(userIds);
-    }
-
-    @GetMapping("/check/{eventId}/user/{userId}")
-    public ResponseEntity<Boolean> checkSpecificUserRegistration(
-            @PathVariable Long eventId,
-            @PathVariable Long userId) {
-        boolean isRegistered = registrationService.isUserRegistered(eventId, userId);
-        return ResponseEntity.ok(isRegistered);
-    }
-
-
 }

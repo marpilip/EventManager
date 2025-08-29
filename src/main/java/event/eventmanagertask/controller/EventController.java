@@ -2,6 +2,7 @@ package event.eventmanagertask.controller;
 
 import event.eventmanagertask.dto.EventCreateRequestDto;
 import event.eventmanagertask.dto.EventDto;
+import event.eventmanagertask.dto.EventSearchRequestDto;
 import event.eventmanagertask.dto.EventUpdateRequestDto;
 import event.eventmanagertask.mapper.EventDtoMapper;
 import event.eventmanagertask.model.Event;
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/events")
@@ -55,5 +58,26 @@ public class EventController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) throws BadRequestException {
         eventService.cancelEvent(eventId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<List<EventDto>> searchEvents(
+            @RequestBody EventSearchRequestDto searchRequest) {
+        List<Event> events = eventService.searchEvents(searchRequest);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(events.stream()
+                        .map(eventDtoMapper::toDto)
+                        .toList());
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<EventDto>> getAllUserEvents() {
+        List<Event> events = eventService.getAllEvents();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(events.stream()
+                        .map(eventDtoMapper::toDto)
+                        .toList());
     }
 }

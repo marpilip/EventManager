@@ -3,6 +3,7 @@ package event.eventmanagertask.service;
 import event.eventmanagertask.entity.EventEntity;
 import event.eventmanagertask.entity.EventStatus;
 import event.eventmanagertask.entity.RegistrationEntity;
+import event.eventmanagertask.mapper.EventEntityMapper;
 import event.eventmanagertask.model.Event;
 import event.eventmanagertask.model.User;
 import event.eventmanagertask.repository.EventRepository;
@@ -24,13 +25,15 @@ public class RegistrationService {
     private final EventRepository eventRepository;
     private final EventService eventService;
     private final AuthenticationService authenticationService;
+    private final EventEntityMapper eventEntityMapper;
 
     public RegistrationService(RegistrationRepository registrationRepository, EventRepository eventRepository,
-                               EventService eventService, AuthenticationService authenticationService) {
+                               EventService eventService, AuthenticationService authenticationService, EventEntityMapper eventEntityMapper) {
         this.registrationRepository = registrationRepository;
         this.eventRepository = eventRepository;
         this.eventService = eventService;
         this.authenticationService = authenticationService;
+        this.eventEntityMapper = eventEntityMapper;
     }
 
     public void registerUserOnEvent(User user, Long eventId) throws BadRequestException {
@@ -76,12 +79,13 @@ public class RegistrationService {
         registrationRepository.delete(registration);
     }
 
-    public List<Long> getUserEventRegistrations() {
+    public List<Event> getUserEventRegistrations() {
         User currentUser = authenticationService.getCurrentAuthenticatedUserOrThrow();
         List<RegistrationEntity> registrations = registrationRepository.findByUserId(currentUser.id());
 
         return registrations.stream()
-                .map(registration -> registration.getEvent().getId())
+                .map(RegistrationEntity::getEvent)
+                .map(eventEntityMapper::toDomain)
                 .toList();
     }
 
