@@ -1,7 +1,7 @@
 package event.eventmanagertask.repository;
 
-import event.eventmanagertask.entity.Location;
+import event.eventmanagertask.entity.LocationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface LocationRepository extends JpaRepository<Location, Long> {
+public interface LocationRepository extends JpaRepository<LocationEntity, Long> {
 }

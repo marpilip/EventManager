@@ -32,7 +32,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                          AuthenticationException authException) throws IOException, ServletException {
         log.error("Ошибка авторизации: ", authException);
         ServerErrorDto messageResponse = new ServerErrorDto(
-                "Ошибка авторизации",
+                "Auth error",
                 authException.getMessage(),
                 LocalDateTime.now()
         );

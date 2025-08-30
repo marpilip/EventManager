@@ -16,6 +16,7 @@ import java.util.NoSuchElementException;
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException ex) {
         ErrorMessageResponse errorResponse = new ErrorMessageResponse(
@@ -41,6 +42,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("Ошибка авторизации", ex);
         ServerErrorDto errorResponse = new ServerErrorDto(
                 "Доступ запрещен",
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
+        log.error("Недостаточно прав", ex);
+
+        ServerErrorDto errorResponse = new ServerErrorDto(
+                "Доступ запрещен, недостаточно прав доступа",
                 ex.getMessage(),
                 LocalDateTime.now()
         );

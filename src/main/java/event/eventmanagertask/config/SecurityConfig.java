@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
@@ -40,13 +39,46 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers(HttpMethod.GET, "/events/my")
-                                .hasAnyAuthority("ADMIN", "USER")
-
+                                // регистрация
                                 .requestMatchers(HttpMethod.POST, "/users")
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/users/auth")
                                 .permitAll()
+
+                                // Мероприятия
+                                .requestMatchers(HttpMethod.POST, "/events")
+                                .hasAnyAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/events")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/events/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/events/search")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/my")
+                                .hasAnyAuthority("USER", "ADMIN")
+
+                                // Регистрация
+                                .requestMatchers(HttpMethod.POST, "/events/registrations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/events/registrations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/events/registrations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+
+                                // Локации
+                                .requestMatchers(HttpMethod.POST, "/locations")
+                                .hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/locations/**")
+                                .hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/locations/**")
+                                .hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/locations/**")
+                                .hasAnyAuthority("USER", "ADMIN")
+
                                 .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint)

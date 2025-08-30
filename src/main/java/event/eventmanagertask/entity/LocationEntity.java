@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "locations")
-public class Location {
+public class LocationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,7 +21,7 @@ public class Location {
     @Column
     private String description;
 
-    public Location() {
+    public LocationEntity() {
     }
 
     public Long getId() {
