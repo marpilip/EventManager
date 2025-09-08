@@ -1,6 +1,7 @@
 package event.eventmanagertask.config;
 
 import event.eventmanagertask.jwt.JwtTokenFilter;
+import event.eventmanagertask.jwt.JwtTokenManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,11 @@ public class SecurityConfig {
     @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
     @Autowired
-    private JwtTokenFilter jwtTokenFilter;
+    private final JwtTokenManager jwtTokenManager;
+
+    public SecurityConfig(JwtTokenManager jwtTokenManager) {
+        this.jwtTokenManager = jwtTokenManager;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -83,7 +88,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(customAuthenticationEntryPoint)
                                 .accessDeniedHandler(customAccessDeniedHandler))
-                .addFilterBefore(jwtTokenFilter, AnonymousAuthenticationFilter.class)
+                .addFilterBefore(jwtTokenFilter(), AnonymousAuthenticationFilter.class)
                 .build();
     }
 
@@ -105,5 +110,10 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public JwtTokenFilter jwtTokenFilter() {
+        return new JwtTokenFilter(jwtTokenManager);
     }
 }

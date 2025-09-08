@@ -1,7 +1,12 @@
 package event.eventmanagertask.jwt;
 
+import event.eventmanagertask.model.Role;
+import event.eventmanagertask.model.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +15,7 @@ import java.util.Date;
 
 @Component
 public class JwtTokenManager {
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenManager.class);
 
     private final long expirationTime;
     private final SecretKey secretKey;
@@ -21,10 +27,17 @@ public class JwtTokenManager {
         this.secretKey = Keys.hmacShaKeyFor(keyString.getBytes());
     }
 
-    public String generateToken(String login) {
+    public String generateToken(User user) {
+        if (user == null) {
+            logger.error("User with login {} not found", user.login());
+            throw new IllegalArgumentException("User not found with login: " + user.login());
+        }
+
         return Jwts
                 .builder()
-                .subject(login)
+                .subject(user.login())
+                .claim("userId", user.id())
+                .claim("role", user.role().name())
                 .signWith(secretKey)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
@@ -32,32 +45,33 @@ public class JwtTokenManager {
     }
 
     public String getLoginFromToken(String token) {
+        return parseToken(token).getSubject();
+    }
+
+    private Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
     }
 
-    public boolean isTokenValid(String jwtToken) {
+    public Long getUserIdFromToken(String token) {
+        return parseToken(token).get("userId", Long.class);
+    }
+
+    public Role getRoleFromToken(String token) {
+        String roleString = parseToken(token).get("role", String.class);
+        return Role.valueOf(roleString);
+    }
+
+    public boolean isTokenValid(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parse(jwtToken);
+            parseToken(token);
+            return true;
         } catch (Exception e) {
+            logger.warn("Invalid JWT token: {}", e.getMessage());
             return false;
         }
-        return true;
-    }
-
-    public String getRoleFromToken(String jwtToken) {
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(jwtToken)
-                .getPayload()
-                .get("role", String.class);
     }
 }
