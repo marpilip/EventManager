@@ -1,14 +1,13 @@
 package event.eventmanagertask.jwt;
 
+import event.eventmanagertask.model.Role;
 import event.eventmanagertask.model.User;
-import event.eventmanagertask.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,13 +21,9 @@ import java.util.List;
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenFilter.class);
-    private final UserService userService;
     private final JwtTokenManager jwtTokenManager;
 
-    public JwtTokenFilter(
-            @Lazy UserService userService,
-            JwtTokenManager jwtTokenManager) {
-        this.userService = userService;
+    public JwtTokenFilter(JwtTokenManager jwtTokenManager) {
         this.jwtTokenManager = jwtTokenManager;
     }
 
@@ -45,21 +40,42 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = authorizationHeader.substring("Bearer ".length());
         String loginFromToken;
+
         try {
-            loginFromToken = jwtTokenManager.getLoginFromToken(token);
+            if (!jwtTokenManager.isTokenValid(token)) {
+                logger.warn("Invalid JWT token");
+                filterChain.doFilter(request, response);
+                return;
+            }
+            String login = jwtTokenManager.getLoginFromToken(token);
+            Long userId = jwtTokenManager.getUserIdFromToken(token);
+            Role role = jwtTokenManager.getRoleFromToken(token);
+
+            logger.debug("Extracted from token - login: {}, userId: {}, role: {}", login, userId, role);
+
+            if (login == null || userId == null || role == null) {
+                logger.warn("Missing required claims in token");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Создаем User объект из данных токена
+            User user = User.fromTokenData(userId, login, role);
+
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                            user,
+                            null,
+                            List.of(new SimpleGrantedAuthority(role.name()))
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            logger.debug("Authentication set for user: {}", user);
+
         } catch (Exception e) {
-            logger.error("Ошибка считывания jwt ", e);
-            filterChain.doFilter(request, response);
-            return;
+            logger.error("Error processing JWT token: {}", e.getMessage(), e);
         }
 
-        User user = userService.findByLogin(loginFromToken);
-
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user,
-                null,
-                List.of(new SimpleGrantedAuthority(user.role().toString())));
-
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
     }
 }

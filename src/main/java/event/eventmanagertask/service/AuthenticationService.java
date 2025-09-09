@@ -13,11 +13,13 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenManager jwtTokenManager;
+    private final UserService userService;
 
     public AuthenticationService(AuthenticationManager authenticationManager,
-                                 JwtTokenManager jwtTokenManager) {
+                                 JwtTokenManager jwtTokenManager, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenManager = jwtTokenManager;
+        this.userService = userService;
     }
 
     public String authenticateUser(SignInRequest signInRequest) {
@@ -28,7 +30,8 @@ public class AuthenticationService {
                 )
         );
 
-        return jwtTokenManager.generateToken(signInRequest.login());
+        User user = userService.findByLogin(signInRequest.login());
+        return jwtTokenManager.generateToken(user);
     }
 
     public User getCurrentAuthenticatedUserOrThrow() {

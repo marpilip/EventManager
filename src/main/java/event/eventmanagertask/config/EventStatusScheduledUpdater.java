@@ -27,20 +27,21 @@ public class EventStatusScheduledUpdater {
 
             startedEvents.forEach(eventId -> {
                 eventRepository.changeEventStatus(eventId, EventStatus.STARTED);
-                logger.debug("Статус мероприятия {} изменен на STARTED", eventId);
+                logger.debug("Статус мероприятия {} изменен с WAIT_START на STARTED", eventId);
             });
 
             List<Long> endedEvents = eventRepository.findEndedEventsWithStatus(EventStatus.STARTED);
+
             endedEvents.forEach(eventId -> {
                 eventRepository.changeEventStatus(eventId, EventStatus.FINISHED);
-                logger.debug("Статус мероприятия {} изменен на FINISHED", eventId);
+                logger.debug("Статус мероприятия {} изменен с STARTED на FINISHED", eventId);
             });
 
-            logger.info("Начатых мероприятий: {}, Завершенных: {}",
+            logger.info("Обработка статусов завершена. Начатых мероприятий: {}, Завершенных: {}",
                     startedEvents.size(), endedEvents.size());
 
         } catch (Exception e) {
-            logger.error("Ошибка в обработке статусов мероприятий ", e);
+            logger.error("Ошибка в обработке статусов мероприятий", e);
         }
     }
 }
